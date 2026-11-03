@@ -1,0 +1,6 @@
+{
+  "name": "Complete Notebook – Official Digital Workspace",
+  "description": "Official global website for Complete Notebook by RyhStar Innovation. A flexible offline & online all-in-one digital workspace on Google Play Store for smart notes, built-in OCR, financial tracking, agendas, precision alarms, and private Google Drive backups—without monthly subscription fees.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

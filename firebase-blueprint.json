@@ -1,0 +1,200 @@
+{
+  "entities": {
+    "LocalizedUpdateText": {
+      "title": "LocalizedUpdateText",
+      "description": "Localized headline and release summary for a single supported language.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Localized headline of the update or announcement.",
+          "minLength": 3,
+          "maxLength": 140
+        },
+        "summary": {
+          "type": "string",
+          "description": "Localized detailed release notes or announcement body.",
+          "minLength": 10,
+          "maxLength": 3000
+        }
+      },
+      "required": ["title", "summary"]
+    },
+    "UpdateTranslations": {
+      "title": "UpdateTranslations",
+      "description": "Optional dictionary of localized release notes keyed by supported language code.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "object",
+          "$ref": "LocalizedUpdateText",
+          "description": "Bahasa Indonesia release notes."
+        },
+        "en": {
+          "type": "object",
+          "$ref": "LocalizedUpdateText",
+          "description": "English release notes."
+        },
+        "es": {
+          "type": "object",
+          "$ref": "LocalizedUpdateText",
+          "description": "Spanish release notes."
+        },
+        "fr": {
+          "type": "object",
+          "$ref": "LocalizedUpdateText",
+          "description": "French release notes."
+        },
+        "ja": {
+          "type": "object",
+          "$ref": "LocalizedUpdateText",
+          "description": "Japanese release notes."
+        },
+        "ar": {
+          "type": "object",
+          "$ref": "LocalizedUpdateText",
+          "description": "Arabic release notes."
+        },
+        "ru": {
+          "type": "object",
+          "$ref": "LocalizedUpdateText",
+          "description": "Russian release notes."
+        },
+        "ko": {
+          "type": "object",
+          "$ref": "LocalizedUpdateText",
+          "description": "Korean release notes."
+        }
+      }
+    },
+    "AppUpdate": {
+      "title": "AppUpdate",
+      "description": "Official release notes, feature updates, and announcements for Complete Notebook.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Primary fallback headline of the update or announcement.",
+          "minLength": 3,
+          "maxLength": 140
+        },
+        "version": {
+          "type": "string",
+          "description": "Application version tag such as 1.0.1+1 or v1.0.1+2.",
+          "minLength": 1,
+          "maxLength": 32,
+          "pattern": "^[a-zA-Z0-9.+_()\\- ]+$"
+        },
+        "category": {
+          "type": "string",
+          "description": "Classification of the announcement.",
+          "enum": ["release", "feature", "security", "announcement"],
+          "minLength": 4,
+          "maxLength": 20
+        },
+        "summary": {
+          "type": "string",
+          "description": "Primary fallback release notes or announcement body.",
+          "minLength": 10,
+          "maxLength": 3000
+        },
+        "defaultLang": {
+          "type": "string",
+          "description": "Primary language code used as default fallback for this release.",
+          "enum": ["id", "en", "es", "fr", "ja", "ar", "ru", "ko"],
+          "minLength": 2,
+          "maxLength": 2
+        },
+        "translations": {
+          "type": "object",
+          "$ref": "UpdateTranslations",
+          "description": "Optional per-language map of localized titles and release notes."
+        },
+        "playStoreUrl": {
+          "type": "string",
+          "description": "Optional direct Google Play link for the release.",
+          "minLength": 0,
+          "maxLength": 300
+        },
+        "pinned": {
+          "type": "boolean",
+          "description": "Whether this announcement is pinned at the top of the feed."
+        },
+        "published": {
+          "type": "boolean",
+          "description": "Whether this announcement is publicly visible to global visitors."
+        },
+        "authorUid": {
+          "type": "string",
+          "description": "Firebase Auth UID of the developer who published the update.",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "authorName": {
+          "type": "string",
+          "description": "Public display name of the publisher (e.g. RyhStar Innovation).",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the update was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the update was last modified."
+        }
+      },
+      "required": [
+        "title",
+        "version",
+        "category",
+        "summary",
+        "playStoreUrl",
+        "pinned",
+        "published",
+        "authorUid",
+        "authorName",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AdminRole": {
+      "title": "AdminRole",
+      "description": "Trusted administrator membership record keyed by Firebase Auth UID.",
+      "type": "object",
+      "properties": {
+        "grantedByUid": {
+          "type": "string",
+          "description": "UID of the developer admin who granted access.",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "label": {
+          "type": "string",
+          "description": "Role description without PII.",
+          "minLength": 2,
+          "maxLength": 60
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when admin access was recorded."
+        }
+      },
+      "required": ["grantedByUid", "label", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/app_updates/{updateId}": {
+      "schema": "AppUpdate",
+      "description": "Publicly readable (when published == true) official multilingual app changelogs and announcements managed exclusively by verified RyhStar Innovation admin."
+    },
+    "/admins/{adminId}": {
+      "schema": "AdminRole",
+      "description": "Trusted admin registry keyed by UID with zero PII fields."
+    }
+  }
+}

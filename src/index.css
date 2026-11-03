@@ -1,0 +1,191 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --font-display: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --font-sans: 'DM Sans', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  }
+
+  html {
+    font-family: var(--font-sans);
+    scroll-behavior: smooth;
+  }
+
+  h1, h2, h3, h4, .font-display {
+    font-family: var(--font-display);
+  }
+
+  code, pre, .font-mono {
+    font-family: var(--font-mono);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@keyframes phoneFloatGentle {
+  0%, 100% {
+    transform: translate3d(0, 3.5px, 0);
+  }
+  50% {
+    transform: translate3d(0, -5.5px, 0);
+  }
+}
+
+@keyframes auraBreatheSoft {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale3d(0.93, 0.93, 1);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translate3d(0, 0, 0) scale3d(1.07, 1.07, 1);
+    opacity: 0.96;
+  }
+}
+
+@keyframes auraDriftSoft {
+  0%, 100% {
+    transform: translate3d(-8px, -6px, 0) scale3d(1.04, 0.96, 1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translate3d(8px, 6px, 0) scale3d(0.96, 1.04, 1);
+    opacity: 0.88;
+  }
+}
+
+@keyframes haloRingPulse {
+  0%, 100% {
+    transform: translate3d(0, 3.5px, 0) scale3d(0.985, 0.99, 1);
+    opacity: 0.26;
+  }
+  50% {
+    transform: translate3d(0, -5.5px, 0) scale3d(1.022, 1.012, 1);
+    opacity: 0.68;
+  }
+}
+
+@keyframes rimOrbitSpin {
+  0% {
+    transform: translate3d(-50%, -50%, 0) rotate(0deg);
+  }
+  100% {
+    transform: translate3d(-50%, -50%, 0) rotate(360deg);
+  }
+}
+
+.animate-phone-float {
+  will-change: transform;
+  backface-visibility: hidden;
+  animation: phoneFloatGentle 6.8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+.hero-ambient-orb {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  background: radial-gradient(
+    50% 50% at 50% 50%,
+    rgba(59, 130, 246, 0.16) 0%,
+    rgba(56, 189, 248, 0.07) 52%,
+    rgba(56, 189, 248, 0) 100%
+  );
+  animation: auraBreatheSoft 8.5s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+.dark .hero-ambient-orb {
+  background: radial-gradient(
+    50% 50% at 50% 50%,
+    rgba(56, 189, 248, 0.18) 0%,
+    rgba(37, 99, 235, 0.08) 54%,
+    rgba(14, 165, 233, 0) 100%
+  );
+}
+
+.phone-aura-breathe {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  background: radial-gradient(
+    50% 50% at 50% 50%,
+    rgba(59, 130, 246, 0.24) 0%,
+    rgba(56, 189, 248, 0.11) 48%,
+    rgba(56, 189, 248, 0) 100%
+  );
+  animation: auraBreatheSoft 7.2s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+.dark .phone-aura-breathe {
+  background: radial-gradient(
+    50% 50% at 50% 50%,
+    rgba(56, 189, 248, 0.28) 0%,
+    rgba(37, 99, 235, 0.14) 50%,
+    rgba(14, 165, 233, 0) 100%
+  );
+}
+
+.phone-aura-drift {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  background: radial-gradient(
+    46% 46% at 50% 50%,
+    rgba(99, 102, 241, 0.17) 0%,
+    rgba(56, 189, 248, 0.08) 52%,
+    rgba(56, 189, 248, 0) 100%
+  );
+  animation: auraDriftSoft 10.4s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+.dark .phone-aura-drift {
+  background: radial-gradient(
+    46% 46% at 50% 50%,
+    rgba(99, 102, 241, 0.22) 0%,
+    rgba(56, 189, 248, 0.1) 52%,
+    rgba(56, 189, 248, 0) 100%
+  );
+}
+
+.phone-halo-ring {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  border: 1px solid rgba(59, 130, 246, 0.24);
+  box-shadow: 0 0 24px rgba(56, 189, 248, 0.12);
+  animation: haloRingPulse 6.8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+.dark .phone-halo-ring {
+  border-color: rgba(56, 189, 248, 0.3);
+  box-shadow: 0 0 28px rgba(56, 189, 248, 0.16);
+}
+
+.phone-rim-orbit {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 220%;
+  aspect-ratio: 1 / 1;
+  will-change: transform;
+  backface-visibility: hidden;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(59, 130, 246, 0.65) 55deg,
+    rgba(56, 189, 248, 0.5) 105deg,
+    transparent 165deg,
+    transparent 180deg,
+    rgba(99, 102, 241, 0.5) 235deg,
+    rgba(56, 189, 248, 0.6) 285deg,
+    transparent 345deg,
+    transparent 360deg
+  );
+  animation: rimOrbitSpin 11s linear infinite;
+}
+

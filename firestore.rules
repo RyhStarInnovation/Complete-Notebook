@@ -1,0 +1,176 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Default-Deny Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Core Primitives
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isBootstrappedDeveloper() {
+      return isVerifiedUser() && request.auth.token.email == 'ryhstarr@gmail.com';
+    }
+
+    function isAdmin() {
+      return isBootstrappedDeveloper() || (
+        isVerifiedUser() && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // Multilingual Entry & Map Validators (Synchronized with firebase-blueprint.json)
+    function isValidLocalizedUpdateText(entry) {
+      return entry is map
+        && entry.keys().hasAll(['title', 'summary'])
+        && entry.keys().hasOnly(['title', 'summary'])
+        && entry.title is string && entry.title.size() >= 3 && entry.title.size() <= 140
+        && entry.summary is string && entry.summary.size() >= 10 && entry.summary.size() <= 3000;
+    }
+
+    function isValidUpdateTranslations(trans) {
+      return trans is map
+        && trans.keys().hasOnly(['id', 'en', 'es', 'fr', 'ja', 'ar', 'ru', 'ko'])
+        && (!('id' in trans) || isValidLocalizedUpdateText(trans.id))
+        && (!('en' in trans) || isValidLocalizedUpdateText(trans.en))
+        && (!('es' in trans) || isValidLocalizedUpdateText(trans.es))
+        && (!('fr' in trans) || isValidLocalizedUpdateText(trans.fr))
+        && (!('ja' in trans) || isValidLocalizedUpdateText(trans.ja))
+        && (!('ar' in trans) || isValidLocalizedUpdateText(trans.ar))
+        && (!('ru' in trans) || isValidLocalizedUpdateText(trans.ru))
+        && (!('ko' in trans) || isValidLocalizedUpdateText(trans.ko));
+    }
+
+    // Entity Blueprint Validators (Synchronized with firebase-blueprint.json)
+    function isValidAppUpdate(data) {
+      return data.keys().hasAll([
+          'title',
+          'version',
+          'category',
+          'summary',
+          'playStoreUrl',
+          'pinned',
+          'published',
+          'authorUid',
+          'authorName',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'title',
+          'version',
+          'category',
+          'summary',
+          'defaultLang',
+          'translations',
+          'playStoreUrl',
+          'pinned',
+          'published',
+          'authorUid',
+          'authorName',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.title is string && data.title.size() >= 3 && data.title.size() <= 140
+        && data.version is string && data.version.size() >= 1 && data.version.size() <= 32 && data.version.matches('^[a-zA-Z0-9.+_()\\- ]+$')
+        && data.category is string && data.category.size() >= 4 && data.category.size() <= 20 && data.category in ['release', 'feature', 'security', 'announcement']
+        && data.summary is string && data.summary.size() >= 10 && data.summary.size() <= 3000
+        && (!('defaultLang' in data) || (
+          data.defaultLang is string
+          && data.defaultLang.size() == 2
+          && data.defaultLang in ['id', 'en', 'es', 'fr', 'ja', 'ar', 'ru', 'ko']
+        ))
+        && (!('translations' in data) || isValidUpdateTranslations(data.translations))
+        && data.playStoreUrl is string && data.playStoreUrl.size() <= 300
+        && data.pinned is bool
+        && data.published is bool
+        && data.authorUid is string && data.authorUid.size() >= 1 && data.authorUid.size() <= 128 && data.authorUid == request.auth.uid
+        && data.authorName is string && data.authorName.size() >= 1 && data.authorName.size() <= 80
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidAdminRole(data) {
+      return data.keys().hasAll(['grantedByUid', 'label', 'createdAt'])
+        && data.keys().hasOnly(['grantedByUid', 'label', 'createdAt'])
+        && data.grantedByUid is string && data.grantedByUid.size() >= 1 && data.grantedByUid.size() <= 128 && data.grantedByUid == request.auth.uid
+        && data.label is string && data.label.size() >= 2 && data.label.size() <= 60
+        && data.createdAt is timestamp;
+    }
+
+    // Collection 1: Official Application Updates & Changelogs
+    match /app_updates/{updateId} {
+      allow get: if isValidId(updateId) && (existing().published == true || isAdmin());
+      allow list: if existing().published == true || isBootstrappedDeveloper();
+
+      allow create: if isVerifiedUser()
+        && isValidId(updateId)
+        && isValidAppUpdate(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && isAdmin();
+
+      allow update: if isValidAppUpdate(incoming()) && (
+        isVerifiedUser()
+        && isValidId(updateId)
+        && incoming().authorUid == existing().authorUid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && isAdmin()
+        && (
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'title',
+            'version',
+            'category',
+            'summary',
+            'defaultLang',
+            'translations',
+            'playStoreUrl',
+            'pinned',
+            'published',
+            'authorName',
+            'updatedAt'
+          ]) ||
+          incoming().diff(existing()).affectedKeys().hasOnly(['pinned', 'updatedAt']) ||
+          incoming().diff(existing()).affectedKeys().hasOnly(['published', 'updatedAt'])
+        )
+      );
+
+      allow delete: if isVerifiedUser() && isValidId(updateId) && isAdmin();
+    }
+
+    // Collection 2: Trusted Administrator Registry (Zero PII)
+    match /admins/{adminId} {
+      allow get: if isVerifiedUser() && isValidId(adminId) && (request.auth.uid == adminId || isAdmin());
+      allow list: if false;
+
+      allow create: if isVerifiedUser()
+        && isValidId(adminId)
+        && isValidAdminRole(incoming())
+        && incoming().createdAt == request.time
+        && isAdmin();
+
+      allow update: if false;
+      allow delete: if isVerifiedUser() && isValidId(adminId) && isAdmin();
+    }
+  }
+}
